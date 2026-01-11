@@ -1,0 +1,23 @@
+# Node Configuration
+
+# Address to listen on for incoming connections
+# Format: /ip4/<ip>/tcp/<port> or /ip6/<ip>/tcp/<port>
+listen_addr = "/ip4/0.0.0.0/tcp/9002"
+
+# List of bootstrap peers to connect to on startup
+# Node 3 will connect to Node 1 running on port 9000
+bootstrap_peers = [
+    "/ip4/127.0.0.1/tcp/9000",
+]
+
+# Maximum number of peers to connect to
+max_peers = 50
+
+# Enable mDNS for local network discovery
+# Set to true for local development/testing
+enable_mdns = false
+
+# Heartbeat interval in seconds
+# Used for ping protocol and gossipsub heartbeat
+heartbeat_interval = 30
+

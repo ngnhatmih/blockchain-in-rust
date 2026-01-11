@@ -3,11 +3,61 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct P2PConfig {
+    #[serde(with = "multiaddr_serde")]
     pub listen_addr: Multiaddr,
+    #[serde(with = "multiaddr_vec_serde")]
     pub bootstrap_peers: Vec<Multiaddr>,
     pub max_peers: usize,
     pub enable_mdns: bool,
     pub heartbeat_interval: u64,
+}
+
+// Helper modules for serializing Multiaddr as string
+mod multiaddr_serde {
+    use libp2p::Multiaddr;
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(addr: &Multiaddr, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&addr.to_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Multiaddr, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        s.parse().map_err(serde::de::Error::custom)
+    }
+}
+
+mod multiaddr_vec_serde {
+    use libp2p::Multiaddr;
+    use serde::{Deserialize, Deserializer, Serializer, ser::SerializeSeq};
+
+    pub fn serialize<S>(addrs: &Vec<Multiaddr>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(addrs.len()))?;
+        for addr in addrs {
+            seq.serialize_element(&addr.to_string())?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Multiaddr>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let strings: Vec<String> = Vec::deserialize(deserializer)?;
+        strings
+            .into_iter()
+            .map(|s| s.parse().map_err(serde::de::Error::custom))
+            .collect()
+    }
 }
 
 impl Default for P2PConfig {
